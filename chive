@@ -1,10 +1,18 @@
 #!/bin/bash
 
-for i in {1..30}; do
+USER=$1
+
+peeps() {
+  i=$1
   if ping -W 1 -c 1 hive$i.cs.berkeley.edu &>/dev/null; then
-    ssh $1@hive$i.cs.berkeley.edu "hostname && w -h && printf '\n'"
+    data=$(ssh $USER@hive$i.cs.berkeley.edu "w -h | wc -l")
+    printf "Hive%02d: %02d\n" "$i" "$data"
+  else
+    printf "Hive%02d is down!\n" "$i"
   fi
+}
+
+for i in {1..30}; do
+  peeps $i &
 done
-echo "done!"
-
-
+wait
