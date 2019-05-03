@@ -6,6 +6,14 @@ usage() {
   echo "usage: chive [-u user] [-i identity_file] [-h help] [-v verbose]" && exit 1
 }
 
+proc() {
+  if ping -W 1 -c 1 hive$1.cs.berkeley.edu &>/dev/null; then
+    data=$(ssh -oStrictHostKeyChecking=no -oPasswordAuthentication=no -i $2 $USER@hive$1.cs.berkeley.edu "who|cut -f 1 -d ' '|sort -u|wc -l" 2>/dev/null)
+    [[ $? -eq 0 ]] && printf "%02d  %02d\n" "$1" "$data"
+  fi
+}
+export -f proc
+
 while getopts ":u:i:vh" o; do
   case $o in
     u) USER=$OPTARG;;
@@ -21,15 +29,6 @@ done
 [ -z $USER ] && USER=$(whoami)
 [ -z $ID ] && ID=~/.ssh/id_rsa
 
-
-proc() {
-  if ping -W 1 -c 1 hive$1.cs.berkeley.edu &>/dev/null; then
-    data=$(ssh -oStrictHostKeyChecking=no -oPasswordAuthentication=no -i $2 $USER@hive$1.cs.berkeley.edu "users | wc -w" 2>/dev/null)
-    [[ $? -eq 0 ]] && printf "%02d  %02d\n" "$1" "$data"
-  fi
-}
-
-export -f proc
 printf %d\\n {1..30} | xargs -n1 -P30 -I{} bash -c "proc {} $ID" | sort -k2 > $TMP
 smol=$(head -n1 $TMP | awk '{$1=$0+0;print $1}')
 [ -z $smol ] && printf "Unable to connect to any hives! Check your username and identity file.\n" && exit
