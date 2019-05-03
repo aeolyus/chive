@@ -1,0 +1,10 @@
+#!/bin/bash
+
+for i in {1..30}; do
+  if ping -W 1 -c 1 hive$i.cs.berkeley.edu &>/dev/null; then
+    ssh $1@hive$i.cs.berkeley.edu "hostname && w -h && printf '\n'"
+  fi
+done
+echo "done!"
+
+
