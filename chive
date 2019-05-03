@@ -17,7 +17,7 @@ done
 
 chk() {
   if ping -W 1 -c 1 hive$1.cs.berkeley.edu &>/dev/null; then
-    data=$(ssh $USER@hive$1.cs.berkeley.edu "w -h | wc -l" 2>/dev/null)
+    data=$(ssh $USER@hive$1.cs.berkeley.edu "users | wc -w" 2>/dev/null)
     [[ $? -eq 0 ]] && printf "%2d %02d\n" "$1" "$data"
   fi
 }
