@@ -11,8 +11,5 @@ peeps() {
     printf "Hive%02d is down!\n" "$i"
   fi
 }
-
-for i in {1..30}; do
-  peeps $i &
-done
-wait
+export -f peeps
+printf %s\\n {1..30} | xargs -n 1 -P 30 -I{} bash -c "peeps {}"
