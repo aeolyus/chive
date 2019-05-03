@@ -15,15 +15,15 @@ done
 [ -z $USER ] && USER=$(whoami)
 [ -z $ID ] && ID=~/.ssh/id_rsa
 
-chk() {
+proc() {
   if ping -W 1 -c 1 hive$1.cs.berkeley.edu &>/dev/null; then
-    data=$(ssh -i $2 $USER@hive$1.cs.berkeley.edu "users | wc -w" 2>/dev/null)
+    data=$(ssh -oStrictHostKeyChecking=no -oPasswordAuthentication=no -i $2 $USER@hive$1.cs.berkeley.edu "users | wc -w" 2>/dev/null)
     [[ $? -eq 0 ]] && printf "%2d %02d\n" "$1" "$data"
   fi
 }
 
-export -f chk
-printf %d\\n {1..30} | xargs -n1 -P30 -I{} bash -c "chk {} $ID" > $TMP
+export -f proc
+printf %d\\n {1..30} | xargs -n1 -P30 -I{} bash -c "proc {} $ID" > $TMP
 smol=$(sort -k2 $TMP | head -n1 | awk '{print $1}')
 [ -z $smol ] && echo "No hives available" && exit
 rm -rf $TMP
