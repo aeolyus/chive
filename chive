@@ -1,15 +1,19 @@
 #!/bin/bash
 
 USER=$1
+TMP=/tmp/chive.tmp
 
-peeps() {
+chk() {
   i=$1
   if ping -W 1 -c 1 hive$i.cs.berkeley.edu &>/dev/null; then
     data=$(ssh $USER@hive$i.cs.berkeley.edu "w -h | wc -l")
-    printf "Hive%02d: %02d\n" "$i" "$data"
-  else
-    printf "Hive%02d is down!\n" "$i"
+    printf "%02d %02d\n" "$i" "$data"
   fi
 }
-export -f peeps
-printf %s\\n {1..30} | xargs -n 1 -P 30 -I{} bash -c "peeps {}"
+
+export -f chk
+printf %s\\n {1..30} | xargs -n1 -P30 -I{} bash -c "chk {}" > $TMP
+smol=$(sort -k2 $TMP | head -n1 | awk '{print $1}')
+rm -rf $TMP
+
+ssh $USER@hive$smol.cs.berkeley.edu
