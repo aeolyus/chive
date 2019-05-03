@@ -1,19 +1,32 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-USER=$1
 TMP=/tmp/chive.tmp
 
+while getopts ":u:i:" o; do
+  case $o in
+    u) USER=$OPTARG;;
+    i) ID=$OPTARG;;
+    \?) echo "unknown option: -$OPTARG" >&2; exit 1;;
+    :) echo "missing option argument for -$OPTARG" >&2; exit 1;;
+    *) echo "usage: chive [-u user] [-i identity_file]" && exit 1;;
+  esac
+done
+
+[ -z $USER ] && USER=$(whoami)
+[ -z $ID ] && ID=~/.ssh/id_rsa
+
 chk() {
-  i=$1
-  if ping -W 1 -c 1 hive$i.cs.berkeley.edu &>/dev/null; then
-    data=$(ssh $USER@hive$i.cs.berkeley.edu "w -h | wc -l")
-    printf "%02d %02d\n" "$i" "$data"
+  if ping -W 1 -c 1 hive$1.cs.berkeley.edu &>/dev/null; then
+    data=$(ssh $USER@hive$1.cs.berkeley.edu "w -h | wc -l" 2>/dev/null)
+    [[ $? -eq 0 ]] && printf "%2d %02d\n" "$1" "$data"
   fi
 }
 
 export -f chk
-printf %s\\n {1..30} | xargs -n1 -P30 -I{} bash -c "chk {}" > $TMP
+printf %d\\n {1..30} | xargs -n1 -P30 -I{} bash -c "chk {}" > $TMP
 smol=$(sort -k2 $TMP | head -n1 | awk '{print $1}')
+[ -z $smol ] && echo "No hives available" && exit
 rm -rf $TMP
 
-ssh $USER@hive$smol.cs.berkeley.edu
+ssh -i $ID $USER@hive$smol.cs.berkeley.edu
+exit 0
