@@ -7,9 +7,9 @@ usage() {
 }
 
 proc() {
-  if ping -W 1 -c 1 hive$1.cs.berkeley.edu &>/dev/null; then
-    data=$(ssh -oStrictHostKeyChecking=no -oPasswordAuthentication=no -i $2 $USER@hive$1.cs.berkeley.edu "who|cut -f 1 -d ' '|sort -u|wc -l" 2>/dev/null)
-    [[ $? -eq 0 ]] && printf "%02d  %02d\n" "$1" "$data"
+  if ping -W 1 -c 1 hive"$1".cs.berkeley.edu &>/dev/null; then
+    data=$(ssh -oStrictHostKeyChecking=no -oPasswordAuthentication=no -i "$2" "$USER"@hive"$1".cs.berkeley.edu "who|cut -f 1 -d ' '|sort -u|wc -l" 2>/dev/null)
+    [ $? -eq 0 ] && printf "%02d  %02d\n" "$1" "$data"
   fi
 }
 export -f proc
@@ -24,16 +24,18 @@ while getopts ":u:i:vh" o; do
     :) echo "missing option argument for -$OPTARG" >&2; exit 1;;
   esac
 done
+shift $((OPTIND-1))
 
-[ $h ] && usage
-[ -z $USER ] && USER=$(whoami)
-[ -z $ID ] && ID=~/.ssh/id_rsa
+[ -n "$1" ] && usage
+[ "$h" ] && usage
+[ -z "$USER" ] && USER=$(whoami)
+[ -z "$ID" ] && ID=~/.ssh/id_rsa
 
-printf %d\\n {1..30} | xargs -n1 -P30 -I{} bash -c "proc {} $ID" | sort -k2 > $TMP
+printf %d\\n $(seq 1 30) | xargs -n1 -P0 -I{} bash -c "proc {} $ID" | sort -k2 > $TMP
 smol=$(head -n1 $TMP | awk '{$1=$0+0;print $1}')
-[ -z $smol ] && printf "Unable to connect to any hives! Check your username and identity file.\n" && exit
-[ $v ] && printf "HIVE    USERS\n" && sed -e 's/^/hive/' $TMP
+[ -z "$smol" ] && printf "Unable to connect to any hives! Check your username and identity file.\n" && exit
+[ $v ] && printf "HIVE    USERS\n" && sed -e 's/^/hive/' $TMP && printf "\nConnecting to hive%s...\n" "$smol"
 rm -rf $TMP
 
-ssh -i $ID $USER@hive$smol.cs.berkeley.edu
+ssh -i $ID "$USER"@hive"$smol".cs.berkeley.edu
 exit 0

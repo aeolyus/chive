@@ -58,5 +58,5 @@ $ chive -u USERNAME
 ## Inspired By
 - [Choose Hive](https://github.com/nherson/choose-hive)
 - My CS61C professor [Nicholas Weaver](https://github.com/nherson/choose-hive)
-- Massive amounts of people on the hive
+- Too many people on the hive at the same time
 
